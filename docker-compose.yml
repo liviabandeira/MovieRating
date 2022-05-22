@@ -1,0 +1,34 @@
+version: "3"
+services:
+  movie-rating:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+        - backbase
+    image: lnicacio/movie-rating:latest
+    hostname: movie-rating
+    depends_on:
+      db-movie-rating:
+        condition: service_healthy
+
+    entrypoint: ["java","-jar","/usr/app/MovieRating.jar"]
+    ports:
+      - 8080:8080
+  db-movie-rating:
+    networks:
+        - backbase
+    image: mysql:latest
+    hostname: db-movie-rating
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: movie-rating
+    ports:
+      - 3306:3306
+    healthcheck:
+      test: mysql -uroot -p$$MYSQL_ROOT_PASSWORD -Dmovie-rating --execute "select 1;"
+      interval: 10s
+      timeout: 10s
+      retries: 5
+networks:
+  backbase:
